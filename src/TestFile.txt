@@ -1,0 +1,9 @@
+Привет мир!
+Меня зовут Амир.
+
+Hello world!
+My name is Amir.
+
+MyName123 222
+
+444
