@@ -3,10 +3,13 @@
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Main {
 
+    //Шифровка текста
     public static void CommonEncryption(File originalFile, File encryptedFile, int key) throws IOException {
         try (BufferedReader fin = new BufferedReader(new FileReader(originalFile));
              BufferedWriter fout = new BufferedWriter(new FileWriter(encryptedFile))) {
@@ -81,22 +84,102 @@ public class Main {
             System.out.println("✅ Нужный ключ: Key " + bestKey);
             System.out.println("📝 Текст оригинальный:\n" + bestDecryption);
         }
+    }
 
+    // Статистическая расшифровка
+    public static void StatisticalDecryption(File encryptedFile, File decryptedFile) throws IOException {
+        String encryptedText = new String(Files.readAllBytes(encryptedFile.toPath()));
+        Map<Character, Double> expectedFreq = getExpectedFrequencies();
+
+        int bestKey = 0;
+        double minScore = Double.MAX_VALUE;
+
+        for (int key = 0; key <= 255; key++) {
+            String decrypted = decrypt(encryptedText, key);
+            Map<Character, Double> observedFreq = calculateFrequencies(decrypted);
+
+            double score = calculateDeviation(expectedFreq, observedFreq);
+            if (score < minScore) {
+                minScore = score;
+                bestKey = key;
+            }
+        }
+
+        // Сохранение результата
+        String result = decrypt(encryptedText, bestKey);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(decryptedFile))) {
+            writer.write(result);
+        }
+        System.out.println("Best key: " + bestKey);
+    }
+
+    private static Map<Character, Double> getExpectedFrequencies() {
+        Map<Character, Double> freq = new HashMap<>();
+        // Частоты для русского языка (примерные значения)
+        freq.put('о', 0.1097);
+        freq.put('е', 0.0845);
+        freq.put('а', 0.0801);
+        freq.put('и', 0.0735);
+        freq.put('н', 0.0670);
+        freq.put('т', 0.0626);
+
+        return freq;
+    }
+
+    private static String decrypt(String text, int key) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            sb.append((char) (c - key));
+        }
+        return sb.toString();
+    }
+
+    private static Map<Character, Double> calculateFrequencies(String text) {
+        Map<Character, Integer> counts = new HashMap<>();
+        int totalLetters = 0;
+
+        for (char c : text.toCharArray()) {
+            if (Character.isLetter(c)) {
+                char lowerC = Character.toLowerCase(c);
+                counts.put(lowerC, counts.getOrDefault(lowerC, 0) + 1);
+                totalLetters++;
+            }
+        }
+
+        Map<Character, Double> frequencies = new HashMap<>();
+        for (Map.Entry<Character, Integer> entry : counts.entrySet()) {
+            frequencies.put(entry.getKey(), entry.getValue() / (double) totalLetters);
+        }
+        return frequencies;
+    }
+
+    private static double calculateDeviation(Map<Character, Double> expected, Map<Character, Double> observed) {
+        double score = 0;
+        for (Character c : expected.keySet()) {
+            double exp = expected.getOrDefault(c, 0.0);
+            double obs = observed.getOrDefault(c, 0.0);
+            score += Math.pow(exp - obs, 2);
+        }
+        return score;
     }
 
     public static void main(String[] args) {
-          File originalFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\TestFile.txt");
+//          File originalFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\TestFile.txt");
+//          File encryptedFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\enctyptedFile.txt");
+
 //        File encryptedFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\enctyptedFile.txt");
+//        File outputDirectory = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\BruteForse");
 
         File encryptedFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\enctyptedFile.txt");
-        File outputDirectory = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\BruteForse");
+        File statisticalFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\src\\BruteForse\\statistical_decrypt.txt");
 
-        int key = 7;
+        int key = 3;
 
         try {
 //            CommonEncryption(originalFile, encryptedFile, key);
 //            CommonDecryption(encryptedFile, originalFile, key);
-            BruteForceDecryption(encryptedFile, outputDirectory);
+//            BruteForceDecryption(encryptedFile, outputDirectory);
+            StatisticalDecryption(encryptedFile, statisticalFile);
         } catch (IOException e) {
             System.err.println("Ошибка при чтении файла: " + e.getMessage());
         }
