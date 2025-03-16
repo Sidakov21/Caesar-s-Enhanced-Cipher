@@ -87,18 +87,27 @@ public class Main {
     }
 
     // Статистическая расшифровка
+    /**
+     * Расшифровывает текст с использованием статистического анализа.
+     * Сравнивает частоты символов в зашифрованном тексте с эталонными частотами языка.
+     *
+     * @param encryptedFile  Файл с зашифрованным текстом.
+     * @param decryptedFile  Файл, в который будет записан расшифрованный текст.
+     * @throws IOException   Если возникает ошибка при чтении/записи файлов.
+     */
     public static void StatisticalDecryption(File encryptedFile, File decryptedFile) throws IOException {
         String encryptedText = new String(Files.readAllBytes(encryptedFile.toPath()));
-        Map<Character, Double> expectedFreq = getExpectedFrequencies();
+        Map<Character, Double> expectedFreq = getExpectedFrequencies(); // Эталонные частоты
 
         int bestKey = 0;
         double minScore = Double.MAX_VALUE;
 
+        // Перебор всех возможных ключей (0-255)
         for (int key = 0; key <= 255; key++) {
-            String decrypted = decrypt(encryptedText, key);
-            Map<Character, Double> observedFreq = calculateFrequencies(decrypted);
+            String decrypted = decrypt(encryptedText, key); // Расшифровка текста
+            Map<Character, Double> observedFreq = calculateFrequencies(decrypted); // Частоты в тексте
 
-            double score = calculateDeviation(expectedFreq, observedFreq);
+            double score = calculateDeviation(expectedFreq, observedFreq); // Отклонение
             if (score < minScore) {
                 minScore = score;
                 bestKey = key;
@@ -134,6 +143,7 @@ public class Main {
         return sb.toString();
     }
 
+    // Подсчёт количества каждого символа
     private static Map<Character, Double> calculateFrequencies(String text) {
         Map<Character, Integer> counts = new HashMap<>();
         int totalLetters = 0;
@@ -146,6 +156,7 @@ public class Main {
             }
         }
 
+        // Вычисление частот
         Map<Character, Double> frequencies = new HashMap<>();
         for (Map.Entry<Character, Integer> entry : counts.entrySet()) {
             frequencies.put(entry.getKey(), entry.getValue() / (double) totalLetters);
@@ -158,7 +169,7 @@ public class Main {
         for (Character c : expected.keySet()) {
             double exp = expected.getOrDefault(c, 0.0);
             double obs = observed.getOrDefault(c, 0.0);
-            score += Math.pow(exp - obs, 2);
+            score += Math.pow(exp - obs, 2); // Сумма квадратов отклонений
         }
         return score;
     }

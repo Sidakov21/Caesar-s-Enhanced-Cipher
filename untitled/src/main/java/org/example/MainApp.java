@@ -1,59 +1,98 @@
 package org.example;
 
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import java.io.File;
+import java.io.IOException;
 
-public class CesarApp extends Application {
+public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // Поле для ввода ключа
+        primaryStage.setTitle("Шифр Цезаря");
+
+        // Поля ввода
+        TextField inputField = new TextField();
+        inputField.setPromptText("Введите путь к файлу");
+
         TextField keyField = new TextField();
-        keyField.setPromptText("Введите ключ");
+        keyField.setPromptText("Введите ключ (число)");
 
-        // Поле для ввода текста
-        TextArea inputText = new TextArea();
-        inputText.setPromptText("Введите текст");
+        // Кнопки действий
+        Button encryptButton = new Button("Зашифровать");
+        Button decryptButton = new Button("Расшифровать");
+        Button bruteForceButton = new Button("Brute Force");
+        Button statisticalButton = new Button("Статистический анализ");
 
-        // Поле для вывода результата
-        TextArea outputText = new TextArea();
-        outputText.setPromptText("Результат");
-        outputText.setEditable(false);
+        // Поле вывода результата
+        TextArea resultArea = new TextArea();
+        resultArea.setEditable(false);
 
-        // Кнопка для шифрования
-        Button encryptBtn = new Button("Зашифровать");
-        encryptBtn.setOnAction(e -> {
-            int key = Integer.parseInt(keyField.getText());
-            String text = inputText.getText();
-            String encrypted = Main.encrypt(text, key); // Используем метод из Main
-            outputText.setText(encrypted);
+        // Обработчики событий
+        //Шифровка текста
+        encryptButton.setOnAction(e -> {
+            try {
+                int key = Integer.parseInt(keyField.getText());
+                File originalFile = new File(inputField.getText());
+                File encryptedFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\untitled\\src\\File examples\\encryptedFile.txt");
+                Main.CommonEncryption(originalFile, encryptedFile, key);
+                resultArea.setText("Файл успешно зашифрован!");
+            } catch (NumberFormatException | IOException ex) {
+                resultArea.setText("Ошибка: " + ex.getMessage());
+            }
         });
 
-        // Кнопка для дешифрования
-        Button decryptBtn = new Button("Расшифровать");
-        decryptBtn.setOnAction(e -> {
-            int key = Integer.parseInt(keyField.getText());
-            String text = inputText.getText();
-            String decrypted = Main.decrypt(text, key); // Используем метод из Main
-            outputText.setText(decrypted);
+        //Расшифровка текста с помощью ключа
+        decryptButton.setOnAction(e -> {
+            try {
+                int key = Integer.parseInt(keyField.getText());
+                File encryptedFile = new File(inputField.getText());
+                File decryptedFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\untitled\\File examples\\decryptedFile.txt");
+                Main.CommonDecryption(encryptedFile, decryptedFile, key);
+                resultArea.setText("Файл успешно расшифрован!");
+            } catch (NumberFormatException | IOException ex) {
+                resultArea.setText("Ошибка: " + ex.getMessage());
+            }
+        });
+
+        //Расшифровка текста с помощью brute force (перебор всех вариантов)
+        bruteForceButton.setOnAction(e -> {
+            try {
+                File encryptedFile = new File(inputField.getText());
+                File outputDirectory = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\untitled\\File examples\\BruteForse");
+                Main.BruteForceDecryption(encryptedFile, outputDirectory);
+                resultArea.setText("Brute Force завершен. Проверьте файл результатов.");
+            } catch (IOException ex) {
+                resultArea.setText("Ошибка: " + ex.getMessage());
+            }
+        });
+
+        // Статистическая расшифровка
+        statisticalButton.setOnAction(e -> {
+            try {
+                File encryptedFile = new File(inputField.getText());
+                File statisticalFile = new File("C:\\Users\\Амир\\IdeaProjects\\CesarCipher\\untitled\\File examples\\StatisticalDecrypt\\statistical_decrypt.txt");
+                Main.StatisticalDecryption(encryptedFile, statisticalFile);
+                resultArea.setText("Статистический анализ завершен. Проверьте файл результатов.");
+            } catch (IOException ex) {
+                resultArea.setText("Ошибка: " + ex.getMessage());
+            }
         });
 
         // Компоновка элементов
-        VBox root = new VBox(10, keyField, inputText, outputText, encryptBtn, decryptBtn);
-        Scene scene = new Scene(root, 400, 300);
+        VBox layout = new VBox(10, inputField, keyField, encryptButton, decryptButton,
+                bruteForceButton, statisticalButton, resultArea);
+        layout.setPadding(new Insets(10));
 
-        // Настройка окна
-        primaryStage.setTitle("Шифр Цезаря");
-        primaryStage.setScene(scene);
+        primaryStage.setScene(new Scene(layout, 400, 400));
         primaryStage.show();
     }
 
-    public static void Main(String[] args) {
+    public static void main(String[] args) {
         launch(args);
     }
 }
